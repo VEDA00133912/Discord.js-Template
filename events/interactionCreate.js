@@ -3,17 +3,35 @@ const { Events, MessageFlags } = require('discord.js');
 module.exports = {
     name: Events.InteractionCreate,
     async execute(client, interaction) {
-        if (!interaction.isChatInputCommand()) return; // スラッシュコマンド以外は実行しない
+        // スラッシュコマンド
+        if (interaction.isChatInputCommand()) {
+            const command = client.commands.get(interaction.commandName);
+            if (!command) return;
 
-        const command = client.commands.get(interaction.commandName);
-        if (!command) return;
+            try {
+                await command.execute(interaction);
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({
+                    content: 'コマンド実行中にエラーが発生しました',
+                    flags: MessageFlags.Ephemeral,
+                });
+            }
+        } 
+        // コンテキストメニュー
+        else if (interaction.isContextMenuCommand()) {
+            const command = client.commands.get(interaction.commandName);
+            if (!command) return;
 
-        try {
-            await command.execute(interaction); // 実行
-        } catch (error) {
-            // エラー時の処理
-            console.error(error);
-            await interaction.reply({ content: 'コマンド実行中にエラーが発生しました', flags: MessageFlags.Ephemeral });
+            try {
+                await command.execute(interaction);
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({
+                    content: 'コマンド実行中にエラーが発生しました',
+                    flags: MessageFlags.Ephemeral,
+                });
+            }
         }
     },
 };
